@@ -17,6 +17,7 @@ namespace luaimpl {
 	}
 
 	luaimpl::LuaMachine::~LuaMachine() {
+		lua_close(m_LuaState);
 	}
 
 	void LuaMachine::checkLua(int r) {
@@ -54,8 +55,89 @@ namespace luaimpl {
 		lua_pushstring(m_LuaState, arg);
 		m_ArgCounter++;
 	}
+	void LuaMachine::push(const std::any& arg) {
+
+		if (arg.type() == typeid(int)) {
+			lua_pushinteger(m_LuaState, std::any_cast<int>(arg));
+			return;
+		}
+
+		if (arg.type() == typeid(unsigned int)) {
+			lua_pushinteger(m_LuaState, std::any_cast<unsigned int>(arg));
+			return;
+		}
+
+		if (arg.type() == typeid(short)) {
+			lua_pushinteger(m_LuaState, std::any_cast<short>(arg));
+			return;
+		}
+
+		if (arg.type() == typeid(unsigned short)) {
+			lua_pushinteger(m_LuaState, std::any_cast<unsigned short>(arg));
+			return;
+		}
+
+		if (arg.type() == typeid(long)) {
+			lua_pushinteger(m_LuaState, std::any_cast<long>(arg));
+			return;
+		}
+
+		if (arg.type() == typeid(unsigned long)) {
+			lua_pushinteger(m_LuaState, std::any_cast<unsigned long>(arg));
+			return;
+		}
+
+		if (arg.type() == typeid(float)) {
+			lua_pushnumber(m_LuaState, std::any_cast<float>(arg));
+			return;
+		}
+
+		if (arg.type() == typeid(double)) {
+			lua_pushnumber(m_LuaState, std::any_cast<double>(arg));
+			return;
+		}
+
+		if (arg.type() == typeid(bool)) {
+			lua_pushinteger(m_LuaState, std::any_cast<bool>(arg));
+			return;
+		}
+
+		if (arg.type() == typeid(const char*)) {
+			lua_pushstring(m_LuaState, std::any_cast<const char*>(arg));
+			return;
+		}
+
+		if (arg.type() == typeid(std::string)) {
+			lua_pushstring(m_LuaState, std::any_cast<std::string>(arg).c_str());
+			return;
+		}
+
+		if (arg.type() == typeid(LuaTable)) {
+			push(std::any_cast<LuaTable>(arg));
+			return;
+		}
+
+	}
+	
 	void LuaMachine::push(const std::string& arg) {
 		lua_pushstring(m_LuaState, arg.c_str());
+		m_ArgCounter++;
+	}
+
+	void LuaMachine::push(const LuaTable& table) {
+
+		lua_newtable(m_LuaState);
+
+		for (auto val : table) {
+
+			lua_pushstring(m_LuaState, val.first.c_str());
+			size_t tmp = m_ArgCounter;
+			push(val.second);
+			m_ArgCounter = tmp;
+			lua_settable(m_LuaState, -3);
+
+		}
+
 		m_ArgCounter++;
 	}
 
@@ -199,6 +281,39 @@ namespace luaimpl {
 		}
 
 		return "";
+
+	}
+
+	template<>
+	LuaTable LuaMachine::getResult<LuaTable>() {
+
+		LuaTable result;
+
+		if (lua_istable(m_LuaState, -1)) {
+			lua_pushnil(m_LuaState);
+			while (lua_next(m_LuaState, -2) != 0)
+			{
+				if (lua_istable(m_LuaState, -1)) {
+					result.set(lua_tostring(m_LuaState, -2), getResult<LuaTable>());
+				} else if (lua_isnumber(m_LuaState, -1))
+				{
+					result.set(lua_tostring(m_LuaState, -2), lua_tonumber(m_LuaState, -1));
+				} else if (lua_isboolean(m_LuaState, -1)) {
+					result.set(lua_tostring(m_LuaState, -2), lua_toboolean(m_LuaState, -1));
+				} else if (lua_isstring(m_LuaState, -1)) {
+					result.set(lua_tostring(m_LuaState, -2), std::string(lua_tostring(m_LuaState, -1)));
+				} else { /* ERROR */ }
+
+				lua_pop(m_LuaState, 1);
+
+			}
+
+			return result;
+		} else {
+			//errorhandling				
+		}
+
+		return result;
 
 	}
 

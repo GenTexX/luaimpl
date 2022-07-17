@@ -1,4 +1,5 @@
 #pragma once
+#include <types/luaTable.h>
 #include <string>
 #include <typeinfo>
 extern "C" {
@@ -38,7 +39,9 @@ namespace luaimpl {
 		void push(const float);
 		void push(const double);
 		void push(const char*);
+		void push(const std::any&);
 		void push(const std::string&);
+		void push(const LuaTable&);
 
 		template<typename R>
 		R getResult();
@@ -59,7 +62,7 @@ namespace luaimpl {
 
 		} else std::cout << "[LUA ERROR] not a function" << std::endl;
 
-		return 0;
+		return R();
 		
 		
 	}
