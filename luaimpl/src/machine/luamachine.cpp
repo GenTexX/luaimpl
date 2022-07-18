@@ -20,6 +20,12 @@ namespace luaimpl {
 		lua_close(m_LuaState);
 	}
 
+	std::string LuaMachine::popError() {
+		std::string tmp = m_ErrorStack.top();
+		m_ErrorStack.pop();
+		return tmp;
+	}
+
 	void LuaMachine::checkLua(int r) {
 		if (r != LUA_OK)
 		{
@@ -27,120 +33,86 @@ namespace luaimpl {
 		}
 	}
 
-	void LuaMachine::push(const int arg) {
-		lua_pushnumber(m_LuaState, arg);
-		m_ArgCounter++;
+	void LuaMachine::pushError(const std::string& errorMsg) {
+		m_ErrorStack.push(errorMsg);
 	}
-	void LuaMachine::push(const short arg) {
-		lua_pushnumber(m_LuaState, arg);
-		m_ArgCounter++;
-	}
-	void LuaMachine::push(const long arg) {
-		lua_pushnumber(m_LuaState, arg);
-		m_ArgCounter++;
-	}
-	void LuaMachine::push(const float arg) {
-		lua_pushnumber(m_LuaState, arg);
-		m_ArgCounter++;
-	}
-	void LuaMachine::push(const double arg) {
-		lua_pushnumber(m_LuaState, arg);
-		m_ArgCounter++;
-	}
-	void LuaMachine::push(const bool arg) {
-		lua_pushboolean(m_LuaState, arg);
-		m_ArgCounter++;
-	}
-	void LuaMachine::push(const char* arg) {
-		lua_pushstring(m_LuaState, arg);
-		m_ArgCounter++;
-	}
+
 	void LuaMachine::push(const std::any& arg) {
 
 		if (arg.type() == typeid(int)) {
 			lua_pushinteger(m_LuaState, std::any_cast<int>(arg));
+			m_ArgCounter++;
 			return;
 		}
 
 		if (arg.type() == typeid(unsigned int)) {
 			lua_pushinteger(m_LuaState, std::any_cast<unsigned int>(arg));
+			m_ArgCounter++;
 			return;
 		}
 
 		if (arg.type() == typeid(short)) {
 			lua_pushinteger(m_LuaState, std::any_cast<short>(arg));
+			m_ArgCounter++;
 			return;
 		}
 
 		if (arg.type() == typeid(unsigned short)) {
 			lua_pushinteger(m_LuaState, std::any_cast<unsigned short>(arg));
+			m_ArgCounter++;
 			return;
 		}
 
 		if (arg.type() == typeid(long)) {
 			lua_pushinteger(m_LuaState, std::any_cast<long>(arg));
+			m_ArgCounter++;
 			return;
 		}
 
 		if (arg.type() == typeid(unsigned long)) {
 			lua_pushinteger(m_LuaState, std::any_cast<unsigned long>(arg));
+			m_ArgCounter++;
 			return;
 		}
 
 		if (arg.type() == typeid(float)) {
 			lua_pushnumber(m_LuaState, std::any_cast<float>(arg));
+			m_ArgCounter++;
 			return;
 		}
 
 		if (arg.type() == typeid(double)) {
 			lua_pushnumber(m_LuaState, std::any_cast<double>(arg));
+			m_ArgCounter++;
 			return;
 		}
 
 		if (arg.type() == typeid(bool)) {
 			lua_pushinteger(m_LuaState, std::any_cast<bool>(arg));
+			m_ArgCounter++;
 			return;
 		}
 
 		if (arg.type() == typeid(const char*)) {
 			lua_pushstring(m_LuaState, std::any_cast<const char*>(arg));
+			m_ArgCounter++;
 			return;
 		}
 
 		if (arg.type() == typeid(std::string)) {
 			lua_pushstring(m_LuaState, std::any_cast<std::string>(arg).c_str());
+			m_ArgCounter++;
 			return;
 		}
 
 		if (arg.type() == typeid(LuaTable)) {
 			push(std::any_cast<LuaTable>(arg));
+			m_ArgCounter++;
 			return;
 		}
 
 	}
 	
-	void LuaMachine::push(const std::string& arg) {
-		lua_pushstring(m_LuaState, arg.c_str());
-		m_ArgCounter++;
-	}
-
-	void LuaMachine::push(const LuaTable& table) {
-
-		lua_newtable(m_LuaState);
-
-		for (auto val : table) {
-
-			lua_pushstring(m_LuaState, val.first.c_str());
-			size_t tmp = m_ArgCounter;
-			push(val.second);
-			m_ArgCounter = tmp;
-			lua_settable(m_LuaState, -3);
-
-		}
-
-		m_ArgCounter++;
-	}
-
 	template<>
 	int LuaMachine::getResult<int>() {
 

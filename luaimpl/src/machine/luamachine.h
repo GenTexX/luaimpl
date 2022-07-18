@@ -2,6 +2,8 @@
 #include <types/luaTable.h>
 #include <string>
 #include <typeinfo>
+#include <stack>
+#include <functional>
 extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
@@ -19,12 +21,19 @@ namespace luaimpl {
 
 		template<typename R, typename... Args>
 		R call(const std::string& functionName, const Args ...other);
+		
+		template<typename R, typename ...Args>
+		void bindFunction(const std::string& functionName, std::function<R(Args...)>);
+
+		std::string popError();
 
 	private:
 		lua_State* m_LuaState;
 		size_t m_ArgCounter;
+		std::stack<std::string> m_ErrorStack;
 
 		void checkLua(int r);
+		void pushError(const std::string& errorMsg);
 		
 		template<typename T, typename... Args>
 		void pushValues(const T arg, const Args... other);
@@ -32,16 +41,7 @@ namespace luaimpl {
 		void pushValues(const T arg);
 		void pushValues() {}
 
-		void push(const int);
-		void push(const short);
-		void push(const long);
-		void push(const bool);
-		void push(const float);
-		void push(const double);
-		void push(const char*);
 		void push(const std::any&);
-		void push(const std::string&);
-		void push(const LuaTable&);
 
 		template<typename R>
 		R getResult();
@@ -60,11 +60,24 @@ namespace luaimpl {
 
 			return getResult<R>();
 
-		} else std::cout << "[LUA ERROR] not a function" << std::endl;
+		} else pushError(functionName + " is not a function");
 
 		return R();
 		
 		
+	}
+
+	template<typename R, typename ...Args>
+	inline void LuaMachine::bindFunction(const std::string& functionName, std::function<R(Args...)> function) {
+		lua_pushcfunction(m_LuaState, [](lua_State* L) -> int {
+
+			//get arguments from lua stack
+			//result = function(args);
+			//push result to lua stack
+
+			return 1;	//number of results
+		});
+		lua_setglobal(m_LuaState, functionName.c_str());
 	}
 
 	template<typename T, typename ...Args>

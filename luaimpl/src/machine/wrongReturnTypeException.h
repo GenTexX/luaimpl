@@ -12,7 +12,7 @@ namespace luaimpl {
 		}
 		~WrongReturnTypeException() {}
 		const char* what() const override {
-			return (std::string("Expected ") + m_Expected + " as return type.").c_str();
+			return std::string(std::string("Expected ") + m_Expected + " as return type.").c_str();
 		}
 
 	private:
